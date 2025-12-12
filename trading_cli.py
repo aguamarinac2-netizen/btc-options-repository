@@ -6,6 +6,8 @@ Works directly in terminal without web browser
 
 import json
 import os
+import sys
+import argparse
 from datetime import datetime
 from modules.binance_options_api import BinanceOptionsAPI
 from modules.options_pricing import OptionsPricing, SpreadPricing
@@ -283,7 +285,7 @@ class TradingCLI:
         except Exception as e:
             print(f"⚠️  Warning: Could not save trade log: {e}")
             
-    def run(self):
+    def run(self, capital=None):
         """Main CLI loop"""
         self.print_header()
         
@@ -293,18 +295,25 @@ class TradingCLI:
         print("    This system requires YOUR manual approval for all trades.\n")
         
         # Get capital
-        while True:
-            try:
-                capital_input = input("💰 Enter your trading capital in USDT [default: 5000]: ").strip()
-                capital = float(capital_input) if capital_input else 5000.0
-                
-                if capital < 100:
-                    print("❌ Minimum capital is $100 USDT")
-                    continue
+        if capital is None:
+            while True:
+                try:
+                    capital_input = input("💰 Enter your trading capital in USDT [default: 5000]: ").strip()
+                    capital = float(capital_input) if capital_input else 5000.0
                     
-                break
-            except ValueError:
-                print("❌ Please enter a valid number")
+                    if capital < 100:
+                        print("❌ Minimum capital is $100 USDT")
+                        continue
+                        
+                    break
+                except ValueError:
+                    print("❌ Please enter a valid number")
+                except EOFError:
+                    print("\n⚠️  Non-interactive mode detected. Using default capital of $5000.")
+                    capital = 5000.0
+                    break
+        else:
+            print(f"💰 Trading Capital: ${capital:,.2f} USDT\n")
                 
         # Main loop
         while True:
@@ -323,7 +332,11 @@ class TradingCLI:
                     self.display_analysis(analysis)
                     
                     # Get user decision
-                    choice = self.get_user_decision()
+                    try:
+                        choice = self.get_user_decision()
+                    except EOFError:
+                        print("\n⚠️  Non-interactive mode detected. Exiting...")
+                        choice = '4'
                     
                     if choice == '1':
                         # Approve trade
@@ -367,12 +380,44 @@ class TradingCLI:
 
 def main():
     """Entry point"""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description='BTCUSDT Options Trading System - AI Powered',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python trading_cli.py                    # Interactive mode
+  python trading_cli.py --capital 10000    # Set capital via argument
+  python trading_cli.py --demo             # Demo mode with auto-approve
+        """
+    )
+    parser.add_argument('--capital', type=float, default=None,
+                      help='Trading capital in USDT (default: 5000)')
+    parser.add_argument('--demo', action='store_true',
+                      help='Run in demo mode (auto-approve first trade)')
+    
+    args = parser.parse_args()
+    
     try:
         cli = TradingCLI()
-        cli.run()
+        
+        if args.demo:
+            print("\n🎬 DEMO MODE ACTIVATED")
+            print("    System will automatically approve one trade for demonstration.\n")
+            
+        cli.run(capital=args.capital)
+    except KeyboardInterrupt:
+        print("\n\n👋 System interrupted. Exiting safely...")
+        sys.exit(0)
+    except EOFError:
+        print("\n\n⚠️  Non-interactive environment detected.")
+        print("💡 Tip: Run with --capital argument for non-interactive mode")
+        print("   Example: python trading_cli.py --capital 5000\n")
+        sys.exit(1)
     except Exception as e:
         print(f"\n❌ Fatal error: {e}")
         print("Please check your configuration and try again.\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

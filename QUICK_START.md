@@ -11,7 +11,14 @@ cd /root/Desktop/btc_options_trader
 
 #### Option A: Command-Line Interface (Recommended for beginners)
 ```bash
+# Interactive mode (asks for capital)
 python trading_cli.py
+
+# With capital argument (skips prompt)
+python trading_cli.py --capital 5000
+
+# Show help and all options
+python trading_cli.py --help
 ```
 
 #### Option B: Web Dashboard Interface
@@ -83,9 +90,9 @@ Your API keys are pre-configured in `config/credentials.json.example`:
 ## 📊 Example Session
 
 ```
-$ python trading_cli.py
+$ python trading_cli.py --capital 5000
 
-💰 Enter your trading capital: 5000
+💰 Trading Capital: $5,000.00 USDT
 
 📊 MARKET OVERVIEW
   💰 BTC/USDT Price:     $95,000.00
@@ -181,6 +188,31 @@ Edit `config/credentials.json.example`:
 
 ---
 
-**Ready to Start? Run:** `python trading_cli.py`
+## 🎮 Command-Line Options
+
+```bash
+python trading_cli.py --help
+```
+
+**Available Options:**
+- `--capital AMOUNT` - Set trading capital (e.g., `--capital 10000`)
+- `--demo` - Run in demo mode (future feature)
+- `--help` - Show help message
+
+**Examples:**
+```bash
+# Interactive mode
+python trading_cli.py
+
+# Specify capital directly
+python trading_cli.py --capital 5000
+
+# Specify larger capital
+python trading_cli.py --capital 25000
+```
+
+---
+
+**Ready to Start? Run:** `python trading_cli.py --capital 5000`
 
 **Trade Smart. Trade Safe. Good Luck! 🚀📈**
